@@ -83,15 +83,16 @@ void cmdAdd(rjson::Document& doc, std::map<std::string, std::string>& opts) {
 
     doc.PushBack(expense, allocator);
 
-    std::cout << "# Expense added succesfully (ID: " << id << ")\n";
+    std::cout << "Expense added succesfully (ID: " << id << ")\n";
 }
 
 void cmdList(rjson::Document& doc) {
-    std::cout << "# ID  Date        Description  Amount\n";
+    std::cout << "ID  Date        Description  Amount\n"
+                 "-----------------------------------\n";
 
     for(rjson::SizeType i = 0; i < doc.Size(); i++) {
         auto& e = doc[i];
-        std::cout << "# " 
+        std::cout 
             << e["id"].GetInt() << "   "
             << e["date"].GetString() << "  "
             << e["description"].GetString() << "     "
