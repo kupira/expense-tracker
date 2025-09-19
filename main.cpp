@@ -91,7 +91,7 @@ void cmdList(rjson::Document& doc) {
                  "-----------------------------------\n";
 
     for(rjson::SizeType i = 0; i < doc.Size(); i++) {
-        auto& e = doc[i];
+        auto& e = doc[i]; // e for expense
         std::cout 
             << e["id"].GetInt() << "   "
             << e["date"].GetString() << "  "
@@ -100,9 +100,37 @@ void cmdList(rjson::Document& doc) {
     }
 }
 
+void cmdDelete(rjson::Document& doc, std::map<std::string, std::string>& opts) {
+    if (!opts.count("id")) {
+        std::cerr << "Need --id\n";
+        return;
+    }
+    if (opts.at("id") == "true") {
+        std::cerr << "Provide correct ID\n";
+        return;
+    }
+
+    int targetId = std::stoi(opts.at("id"));
+    bool found = false;
+
+    for (rjson::SizeType i = 0; i < doc.Size(); i++) {
+        if (doc[i]["id"].GetInt() == targetId) {
+            doc.Erase(doc.Begin() + i);
+            found = true;
+            break;
+        }
+    }
+    
+    if (found)
+        std::cout << "Expense deleted succesfully (ID: " << targetId << ")\n";
+    else 
+        std::cerr << "No expense found with ID " << targetId << '\n';
+}
+
 bool handleCommands(rjson::Document& doc, std::string cmd, std::map<std::string, std::string>& opts) {
     if (cmd == "add") cmdAdd(doc, opts);
     else if (cmd == "list") cmdList(doc);
+    else if (cmd == "delete") cmdDelete(doc, opts);
     else {
         std::cerr << "Provide correct command: [add|list|summary|delete]\n";
         return false;
