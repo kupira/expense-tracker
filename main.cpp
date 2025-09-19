@@ -103,11 +103,29 @@ void cmdList(rjson::Document& doc) {
 void cmdSummary(rjson::Document& doc, std::map<std::string, std::string>& opts) {
     double sum = 0;
     
-    if (!opts.count("month")) {
-        for (rjson::SizeType i = 0; i < doc.Size(); i++) {
+    if (!opts.count("month")) { 
+        for (rjson::SizeType i = 0; i < doc.Size(); i++)
             sum += doc[i]["amount"].GetDouble();
+    }
+    else {
+        std::string targetMonth = opts.at("month");
+        // Checking and modifying user provided month
+        if (targetMonth == "none" || std::stoi(targetMonth) < 1 || std::stoi(targetMonth) > 12) {
+            std::cerr << "Provide correct month number\n";
+            return;
+        }
+        if (targetMonth.size() < 2)
+            targetMonth.insert(targetMonth.begin(), '0');
+
+        for (rjson::SizeType i = 0; i < doc.Size(); i++) {
+            std::string date = doc[i]["date"].GetString();
+            std::string month = date.substr(5, 2);
+
+            if (month == targetMonth) 
+                sum += doc[i]["amount"].GetDouble();
         }
     }
+
     std::cout << "Total expenses: " << sum << "kr\n";
 }
 
@@ -144,7 +162,8 @@ bool handleCommands(rjson::Document& doc, std::string cmd, std::map<std::string,
     else if (cmd == "summary") cmdSummary(doc, opts);
     else if (cmd == "delete") cmdDelete(doc, opts);
     else {
-        std::cerr << "Provide correct command: [add|list|summary|delete]\n";
+        std::cerr << "Command: " << cmd << " wasn't found"
+            "\nProvide correct command: [add|list|summary|delete]\n";
         return false;
     }
 
