@@ -57,7 +57,7 @@ std::map<std::string, std::string> parseArguments(int argc, char* argv[]) {
             if (i + 1 < argc && argv[i+1][0] != '-')
                 opts[key] = argv[++i];
             else
-                opts[key] = "true"; 
+                opts[key] = "none"; 
         }
     }
     return opts;
@@ -90,7 +90,7 @@ void cmdList(rjson::Document& doc) {
     std::cout << "ID  Date        Description  Amount\n"
                  "-----------------------------------\n";
 
-    for(rjson::SizeType i = 0; i < doc.Size(); i++) {
+    for (rjson::SizeType i = 0; i < doc.Size(); i++) {
         auto& e = doc[i]; // e for expense
         std::cout 
             << e["id"].GetInt() << "   "
@@ -100,12 +100,23 @@ void cmdList(rjson::Document& doc) {
     }
 }
 
+void cmdSummary(rjson::Document& doc, std::map<std::string, std::string>& opts) {
+    double sum = 0;
+    
+    if (!opts.count("month")) {
+        for (rjson::SizeType i = 0; i < doc.Size(); i++) {
+            sum += doc[i]["amount"].GetDouble();
+        }
+    }
+    std::cout << "Total expenses: " << sum << "kr\n";
+}
+
 void cmdDelete(rjson::Document& doc, std::map<std::string, std::string>& opts) {
     if (!opts.count("id")) {
         std::cerr << "Need --id\n";
         return;
     }
-    if (opts.at("id") == "true") {
+    if (opts.at("id") == "none") {
         std::cerr << "Provide correct ID\n";
         return;
     }
@@ -130,6 +141,7 @@ void cmdDelete(rjson::Document& doc, std::map<std::string, std::string>& opts) {
 bool handleCommands(rjson::Document& doc, std::string cmd, std::map<std::string, std::string>& opts) {
     if (cmd == "add") cmdAdd(doc, opts);
     else if (cmd == "list") cmdList(doc);
+    else if (cmd == "summary") cmdSummary(doc, opts);
     else if (cmd == "delete") cmdDelete(doc, opts);
     else {
         std::cerr << "Provide correct command: [add|list|summary|delete]\n";
@@ -150,7 +162,7 @@ int main(int argc, char* argv[]) {
     auto options = parseArguments(argc, argv);
     std::string command = argv[1];
     
-    if(!handleCommands(data, command, options))
+    if (!handleCommands(data, command, options))
         return 0;
     saveExpenses(filename, data);
     
